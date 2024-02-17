@@ -1,0 +1,59 @@
+import pandas as pd
+import numpy as np
+
+# Leemos datos desde el cv y lo hacemos un dataframe
+auto_df = pd.read_csv("Automobile_data.csv")
+# Con este método encontramos la cantidad de nulls por columnas
+auto_df.isnull().sum()
+
+# Crearemos un proceso para complementar los null con los valores promediados de los alrededores
+# de estos null, con la finalidad de no eliminarlos y hacerlos lo más semejante a la información proveniente
+whereisna = [] 
+# Añadimos a una lista las coordenadas de los null
+for x in np.where(auto_df[::].isna()):
+    whereisna.append(x)
+
+na_row = whereisna[0]
+na_col = whereisna[1]
+bound_na_row = [] 
+bound_na_col = na_col 
+# obtenemos las coordenadas de los datos de los alrededores
+for x in na_row:
+    for i in range(3): # Como es en la misma columna lo dejamos manual a 3 datos
+            bound_na_row.append(x-i-2)
+            bound_na_row.append(x+i+2)
+# Obtenemos los promedios de estos datos y los añadimos a una lista
+n = len(na_row)
+m = n*3
+meann = 0
+list_means = [] 
+for j in range(n):
+    for i in range(n):
+        meann = auto_df.iat[bound_na_row[i],bound_na_col[i]] + meann
+    list_means.append(meann/n)
+# Ponemos dichos valores donde estan los null del dataframe
+for x in range(len(list_means)):
+    auto_df.iat[na_row[x],na_col[x]] = list_means[x]
+# Verificamos que si se colocó uno
+print(auto_df.iat[47, 9])
+
+# A contunuación, pequeños ejercicios del pandas
+# Encontrar modelo con el precio màximo  
+# de forma manual con menos datos
+print(auto_df[['company','price']][auto_df.price==auto_df['price'].max()])
+# con  método
+print(auto_df.max())
+# Agrupación por marca específica
+toyo = auto_df.groupby('company').get_group('toyota')
+# Encontrar cuantos modelos por marca
+totals = auto_df.groupby('company').count()
+print(totals['index'])
+# Encontrar auto más caro por marca
+totals = auto_df.groupby('company').max()
+print(totals['price'])
+# Agrupar por marca, promedio de kilometraje
+miles = auto_df.groupby('company')
+print(miles['company', 'average-mileage'].mean())
+# Acomodar por precio descendente
+auto_df.sort_values('price', ascending=False)
+
